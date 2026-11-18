@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Choose a profile · AgroChat</title>
+  <link rel="icon" href="/static/favicon.png">
+  <link rel="stylesheet" href="/agrochat/assets/style.css">
+  <script type="module" src="/agrochat/assets/profiles.js"></script>
+</head>
+<body class="picker-page">
+  <header class="wordmark"><span class="mark" aria-hidden="true">✳</span> AgroChat</header>
+  <main class="picker">
+    <p class="eyebrow">Your private AI workspace</p>
+    <h1>Who’s chatting?</h1>
+    <p class="muted">Choose your profile to continue to your chats and projects.</p>
+    <div class="profiles" id="profiles" aria-label="Profiles"></div>
+    <p id="status" class="muted" role="status">Loading profiles…</p>
+    <noscript>Enable JavaScript to choose or create a profile.</noscript>
+  </main>
+  <footer>Built with <a href="https://openwebui.com/">Open WebUI</a></footer>
+  <dialog id="dialog" aria-labelledby="dialog-title">
+    <form id="form">
+      <button type="button" class="dismiss" id="cancel" aria-label="Close">×</button>
+      <h2 id="dialog-title"></h2>
+      <p class="muted" id="subtitle"></p>
+      <div id="new-fields" hidden>
+        <label>First name<input name="first_name" autocomplete="given-name" maxlength="60"></label>
+        <label>Surname<input name="surname" autocomplete="family-name" maxlength="60"></label>
+      </div>
+      <label>Password<input name="password" type="password" required></label>
+      <label id="confirmation" hidden>Confirm password<input name="confirm_password" type="password" autocomplete="new-password"></label>
+      <label id="enrollment" hidden>Enrollment code<input name="enrollment_code" type="password" autocomplete="off"></label>
+      <p class="error" id="error" role="alert"></p>
+      <button type="submit" class="primary" id="submit"></button>
+    </form>
+  </dialog>
+</body>
+</html>

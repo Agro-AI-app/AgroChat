@@ -1,0 +1,8 @@
+.agrochat-account-link {
+  display: inline-flex; align-items: center; justify-content: center; gap: .35rem;
+  color: inherit; padding: .32rem; border-radius: .4rem; text-decoration: none;
+  font-size: .75rem; white-space: nowrap; -webkit-app-region: no-drag;
+}
+.agrochat-account-link:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+#sidebar:not([data-state="true"]) .agrochat-account-link span { display: none; }
+#sidebar:not([data-state="true"]) :has(> .agrochat-account-link) { flex-direction: column; }

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Account · AgroChat</title>
+  <link rel="stylesheet" href="/agrochat/assets/style.css">
+  <script type="module" src="/agrochat/assets/account.js"></script>
+</head>
+<body>
+  <header class="wordmark"><span class="mark" aria-hidden="true">✳</span> AgroChat</header>
+  <main class="account" hidden>
+    <a class="back" href="/">← Back to chat</a>
+    <h1>Your account</h1>
+    <p class="muted" id="name"></p>
+    <section>
+      <h2>Profile photo</h2>
+      <p class="muted">Optional. Choose a JPEG, PNG or WebP up to 5 MB.</p>
+      <img id="photo" class="photo" alt="Current profile photo">
+      <label>Choose a new photo<input type="file" id="photo-file" accept="image/jpeg,image/png,image/webp"></label>
+      <button id="remove-photo" type="button">Remove photo</button>
+    </section>
+    <section>
+      <h2>Memory</h2>
+      <p class="muted">AgroChat periodically summarizes saved chats active in the last seven days. Project summaries stay in their project. Only general reply preferences can carry over from other projects.</p>
+      <p id="memory-status" role="status"></p>
+      <div class="actions"><button type="button" id="pause"></button><button type="button" id="reset">Clear memories</button></div>
+      <div id="memories"></div>
+    </section>
+    <section>
+      <h2>Sign out</h2>
+      <button type="button" id="switch">Sign out and choose a profile</button>
+    </section>
+    <section>
+      <details>
+        <summary>Account closure</summary>
+        <p>Closing your account permanently deletes your profile and saved chats. This frees a place for another user.</p>
+        <button class="danger" id="review" type="button">Review account deletion</button>
+      </details>
+    </section>
+    <p class="error" id="error" role="alert"></p>
+  </main>
+  <dialog id="delete-dialog" aria-labelledby="delete-title">
+    <form id="delete-form">
+      <button type="button" class="dismiss" id="cancel" aria-label="Close">×</button>
+      <h2 id="delete-title">Permanently delete your account?</h2>
+      <p>This cannot be undone. To confirm, type <strong id="confirm-name"></strong> and enter your current password.</p>
+      <label>Full name<input name="full_name" autocomplete="off" required></label>
+      <label>Current password<input name="password" type="password" autocomplete="current-password" required></label>
+      <p class="error" id="delete-error" role="alert"></p>
+      <button class="danger" type="submit" id="delete-submit" disabled>Delete my account permanently</button>
+    </form>
+  </dialog>
+</body>
+</html>
