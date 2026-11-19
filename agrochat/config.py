@@ -42,6 +42,9 @@ def configure():
 
     chat_base = env.get('AGROCHAT_CHAT_BASE', 'https://agroai-dev.services.ai.azure.com/openai/v1').rstrip('/')
     embedding_base = env.get('AGROCHAT_EMBEDDING_BASE', 'https://agro-llm.services.ai.azure.com/openai/v1').rstrip('/')
+    env.setdefault('ENABLE_WEB_SEARCH', 'true')
+    env.setdefault('WEB_SEARCH_ENGINE', 'duckduckgo')
+    env.setdefault('DEFAULT_MODEL_METADATA', json.dumps({'defaultFeatureIds': ['web_search']}))
     env.update(
         FROM_INIT_PY='true',
         DATA_DIR=str(data),
