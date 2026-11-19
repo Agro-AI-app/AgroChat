@@ -51,11 +51,33 @@ def check_browser():
         page.get_by_label('Confirm password').fill(PASSWORD)
         page.get_by_role('button', name='Create profile').click()
         expect(page.get_by_role('heading', name='Ada Grower')).to_be_visible()
+        page.reload()
+        page.get_by_role('button', name='Ada Grower').click()
         page.get_by_label('Password', exact=True).fill('wrong password')
-        page.get_by_role('button', name='Sign in', exact=True).click()
-        expect(page.get_by_role('alert')).not_to_be_empty()
+        with page.expect_response('**/agrochat/api/login') as rejected:
+            page.get_by_role('button', name='Sign in', exact=True).click()
+        assert rejected.value.status == 400, rejected.value.text()
+        expect(page.get_by_role('alert')).to_contain_text('incorrect')
+
+        # Simulate the server losing the profile after the picker has loaded.
+        login_url = '**/agrochat/api/login'
+        profiles_url = '**/agrochat/api/profiles'
+        page.route(login_url, lambda route: route.fulfill(status=404, json={'detail': 'Profile not found.'}))
+        page.route(profiles_url, lambda route: route.fulfill(json={'profiles': [], 'limit': 6}))
         page.get_by_label('Password', exact=True).fill(PASSWORD)
         page.get_by_role('button', name='Sign in', exact=True).click()
+        expect(page.get_by_role('status')).to_contain_text('profile list has been refreshed')
+        expect(page.get_by_role('dialog')).not_to_be_visible()
+        expect(page.get_by_role('button', name='Ada Grower')).to_have_count(0)
+        page.unroute(login_url)
+        page.unroute(profiles_url)
+        page.reload()
+        page.get_by_role('button', name='Ada Grower').click()
+
+        page.get_by_label('Password', exact=True).fill(PASSWORD)
+        with page.expect_response('**/agrochat/api/login') as accepted:
+            page.get_by_role('button', name='Sign in', exact=True).click()
+        assert accepted.value.ok, accepted.value.text()
         page.wait_for_url(BASE + '/')
         account = page.get_by_role('link', name='Account & memory')
         expect(account).to_be_visible(timeout=30_000)

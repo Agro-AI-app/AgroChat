@@ -51,6 +51,7 @@ async function load() {
   list.replaceChildren(...result.profiles.map(profile => tile(profile.name, profile.slot, false, () => open(profile))));
   if (result.profiles.length < result.limit) list.append(tile('Add profile', '', true, () => open(null)));
   status.textContent = `${result.profiles.length} of ${result.limit} profiles in use`;
+  return result.profiles;
 }
 
 document.querySelector('#cancel').onclick = () => dialog.close();
@@ -60,21 +61,30 @@ form.addEventListener('submit', async event => {
   submit.disabled = true;
   error.textContent = '';
   const data = Object.fromEntries(new FormData(form));
+  const selected = current;
   try {
-    if (!current) {
+    if (!selected) {
       const profile = await api('/profiles', data);
       await load();
       open(profile);
       return;
     }
     if (localStorage.getItem('token')) await signOut();
-    const result = await api('/login', {profile_id: current.id, password: data.password});
+    const result = await api('/login', {profile_id: selected.id, password: data.password});
     if (!result.token) throw new Error('Could not start a session.');
     resetBrowser();
     localStorage.setItem('token', result.token);
     const target = new URL(params.get('redirect') || '/', location.origin);
     location.replace(target.origin === location.origin && !['/auth', '/profiles'].includes(target.pathname) ? target.href : '/');
   } catch (e) {
+    if (selected && e.status === 404) {
+      const profiles = await load().catch(() => null);
+      if (profiles && !profiles.some(profile => profile.id === selected.id)) {
+        if (current === selected) dialog.close();
+        status.textContent = 'That profile is no longer available. The profile list has been refreshed.';
+        return;
+      }
+    }
     error.textContent = e.message;
   } finally {
     submit.disabled = false;

@@ -28,6 +28,10 @@ def configure():
         raise RuntimeError('AGROCHAT_ORIGIN must use HTTPS outside localhost')
     if url.scheme == 'https' and not env.get('WEBUI_SECRET_KEY'):
         raise RuntimeError('HTTPS deployments require WEBUI_SECRET_KEY')
+    if container_app:
+        database_scheme = urlsplit(env.get('DATABASE_URL', '')).scheme.split('+', 1)[0]
+        if database_scheme not in {'postgres', 'postgresql'}:
+            raise RuntimeError('Azure Container Apps requires a persistent PostgreSQL DATABASE_URL for profiles and chats.')
 
     data = Path(env.get('DATA_DIR', '.data')).resolve()
     data.mkdir(parents=True, exist_ok=True, mode=0o700)

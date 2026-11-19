@@ -3,7 +3,11 @@ export async function api(path, data, method = 'POST') {
     method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
   });
   const result = await response.json();
-  if (!response.ok) throw new Error(typeof result.detail === 'string' ? result.detail : 'Check the form and try again.');
+  if (!response.ok) {
+    const error = new Error(typeof result.detail === 'string' ? result.detail : 'Check the form and try again.');
+    error.status = response.status;
+    throw error;
+  }
   return result;
 }
 
