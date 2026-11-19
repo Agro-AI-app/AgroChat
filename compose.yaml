@@ -2,8 +2,10 @@ services:
   agrochat:
     build: .
     env_file: .env
+    environment:
+      AGROCHAT_ORIGIN: http://127.0.0.1
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:80:80"
     volumes:
       - agrochat-data:/data
     restart: unless-stopped

@@ -12,7 +12,7 @@ uv pip install --torch-backend cpu -r requirements.txt
 .venv/bin/python -m agrochat
 ```
 
-Open **http://127.0.0.1:8080**. Local state lives in `.data/` (SQLite, Chroma, uploads, and a generated session secret). Alternatively, `docker compose up --build` uses a named volume. Keep `AGROCHAT_ORIGIN` in sync with the address used in the browser, including the port.
+Open **http://127.0.0.1:8080**. Local state lives in `.data/` (SQLite, Chroma, uploads, and a generated session secret). If you run AgroChat with `docker compose up --build`, open **http://127.0.0.1** instead. Compose publishes port 80 on loopback, sets `AGROCHAT_ORIGIN` to match, and uses a named volume.
 
 On the picker, use **Add profile**, or select an existing name and enter its password. Register with a first name, surname, password and confirmation. If the operator configures an enrollment code, new profiles also enter that code. Profile names and initials are visible on the opening screen. The **Account & memory** link in the chat sidebar opens optional photo settings, memories, sign-out, and account closure. Closure requires opening the review dialog, typing your full name, and re-entering your password.
 
@@ -53,7 +53,7 @@ Use [Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-app
 1. Use an existing Container Apps environment, Azure Container Registry, PostgreSQL Flexible Server, Blob container, Key Vault, and user-assigned managed identity in the target Azure subscription. The app must be able to reach the database, registry, Key Vault, and Blob service from the Container Apps environment.
 2. Enable the `vector` extension on the server and run `CREATE EXTENSION IF NOT EXISTS vector;` in a new AgroChat database. Use pgvector **0.7+** for `halfvec`. The app role needs permission to create its application tables. Store a TLS-enabled URL (for example `postgresql://USER:ENCODED_PASSWORD@HOST:5432/agrochat?sslmode=require`) as a Key Vault secret.
 3. Give the managed identity **AcrPull**, **Key Vault Secrets User**, and **Storage Blob Data Contributor** on the corresponding resources. Store both model keys and a stable random `WEBUI_SECRET_KEY` in Key Vault, and use their secret URIs in the deployment parameters. You can also set `enrollmentCodeSecretUri` for an optional shared registration code.
-4. Build the image with ACR and deploy [`deploy/container-app.bicep`](deploy/container-app.bicep). It outputs the Azure-provided URL. The app derives its canonical origin from the stable Container Apps name and environment DNS suffix.
+4. Build the image with ACR and deploy [`deploy/container-app.bicep`](deploy/container-app.bicep). The container listens on port `80`, and the template uses that port for ingress and health probes. The template outputs the Azure-provided URL. The app derives its canonical origin from the stable Container Apps name and environment DNS suffix.
 
 ```sh
 az acr build --registry "$ACR_NAME" --image "agrochat:$RELEASE" .

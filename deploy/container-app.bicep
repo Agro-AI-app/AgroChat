@@ -34,7 +34,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
       activeRevisionsMode: 'Single'
       ingress: {
         external: true
-        targetPort: 8080
+        targetPort: 80
         transport: 'auto'
         allowInsecure: false
       }
@@ -80,18 +80,18 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
         probes: [
           {
             type: 'Startup'
-            httpGet: { path: '/ready', port: 8080 }
+            httpGet: { path: '/ready', port: 80 }
             periodSeconds: 5
             failureThreshold: 36
           }
           {
             type: 'Readiness'
-            httpGet: { path: '/ready', port: 8080 }
+            httpGet: { path: '/ready', port: 80 }
             periodSeconds: 10
           }
           {
             type: 'Liveness'
-            httpGet: { path: '/health', port: 8080 }
+            httpGet: { path: '/health', port: 80 }
             periodSeconds: 20
           }
         ]
