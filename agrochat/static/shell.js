@@ -16,6 +16,10 @@
       link.setAttribute('aria-label', 'Account & memory');
       link.innerHTML = svg + '<span>Account &amp; memory</span>';
       userMenu.parentElement.before(link);
+      const projectsLink = link.cloneNode(false);
+      projectsLink.href = '/projects'; projectsLink.title = projectsLink.ariaLabel = 'All projects';
+      projectsLink.innerHTML = '<b aria-hidden="true">▤</b><span>All projects</span>';
+      link.before(projectsLink);
     }
     const projects = sidebar?.querySelector('#sidebar-folders-button');
     if (projects) {

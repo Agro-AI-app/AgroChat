@@ -1,0 +1,9 @@
+# Optional local workaround for OpenSSL 3.5 clients on networks which reset
+# larger TLS ClientHello messages. Keeps certificate validation and TLS 1.3.
+openssl_conf = init
+[init]
+ssl_conf = ssl_settings
+[ssl_settings]
+system_default = tls_defaults
+[tls_defaults]
+Groups = X25519:P-256:P-384

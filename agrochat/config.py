@@ -48,7 +48,9 @@ def configure():
     embedding_base = env.get('AGROCHAT_EMBEDDING_BASE', 'https://agro-llm.services.ai.azure.com/openai/v1').rstrip('/')
     env.setdefault('ENABLE_WEB_SEARCH', 'true')
     env.setdefault('WEB_SEARCH_ENGINE', 'duckduckgo')
-    env.setdefault('DEFAULT_MODEL_METADATA', json.dumps({'defaultFeatureIds': ['web_search']}))
+    image_enabled = bool(env.get('AZURE_IMAGE_API_KEY', '').strip())
+    features = ['web_search', 'code_interpreter'] + (['image_generation'] if image_enabled else [])
+    env.setdefault('DEFAULT_MODEL_METADATA', json.dumps({'defaultFeatureIds': features}))
     env.update(
         FROM_INIT_PY='true',
         DATA_DIR=str(data),
@@ -71,6 +73,9 @@ def configure():
         ENABLE_ADMIN_CHAT_ACCESS='false',
         ENABLE_OLLAMA_API='false',
         ENABLE_OPENAI_API='true',
+        ENABLE_IMAGE_GENERATION=str(image_enabled).lower(),
+        ENABLE_IMAGE_EDIT=str(image_enabled).lower(),
+        CODE_INTERPRETER_ENGINE='pyodide',
         BYPASS_MODEL_ACCESS_CONTROL='true',
         OPENAI_API_BASE_URLS=chat_base,
         OPENAI_API_KEYS=env['AZURE_CHAT_API_KEY'],

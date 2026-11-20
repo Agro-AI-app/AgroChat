@@ -182,6 +182,9 @@ def check_api(token):
         projects = {p['name']: p['summary'] for p in memory['projects']}
         assert 'FROST-ORCHARD-701' in projects.get('Orchard A', '') and 'RAIN-ORCHARD-808' not in projects['Orchard A'], memory
         assert 'RAIN-ORCHARD-808' in projects.get('Orchard B', '') and 'FROST-ORCHARD-701' not in projects['Orchard B'], memory
+        viewer = f'/agrochat/api/projects/{project_a}/memory'
+        assert checked(api.get(viewer, headers=headers))['summary'] == projects['Orchard A']
+        assert api.get(viewer, headers=other).status_code == 404
         assert all(canary not in memory['profile'] for canary in ('FROST-ORCHARD-701', 'RAIN-ORCHARD-808', 'EXPIRED-404'))
         assert 'Expired canary' not in {chat['title'] for chat in memory['chats']}
         assert not checked(api.get('/agrochat/api/account/memory', headers=other))['projects']

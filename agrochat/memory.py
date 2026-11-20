@@ -13,7 +13,7 @@ from sqlalchemy import select, update
 
 from open_webui.internal.db import get_async_db, get_async_session
 from open_webui.models.chats import Chat, Chats
-from open_webui.models.folders import Folder
+from open_webui.models.folders import Folder, Folders
 from open_webui.utils.auth import get_verified_user
 from open_webui.utils.misc import add_or_update_system_message, get_message_list
 
@@ -87,7 +87,8 @@ class Summarizer:
     async def chat(self, messages):
         raw = await self.complete(
             'Return one JSON object with keys summary and preferences. Summary: up to 170 words of useful '
-            'facts, decisions and unresolved questions for this conversation. Omit credentials. Preferences: '
+            'facts, decisions and unresolved questions for this conversation. Preserve stated project names, '
+            'codenames, identifiers and quantities verbatim, including facts in requests. Omit credentials. Preferences: '
             'include only explicit standing user preferences. Use only these allowed keys and values: '
             + json.dumps(PREFERENCES) + '. Do not infer preferences from assistant messages.', messages,
         )
@@ -249,6 +250,18 @@ async def get_memory(response: Response, user=Depends(get_verified_user), db=Dep
             'projects': [{'name': names[folder], 'summary': value} for folder, value in scopes.items() if folder],
             'chats': [{'title': entry['title'], 'project': names.get(entry['folder']), 'summary': entry['summary']}
                       for entry in entries.values()]}
+
+
+@router.get('/projects/{folder_id}/memory')
+async def project_memory(folder_id: str, response: Response, user=Depends(get_verified_user), db=Depends(get_async_session)):
+    response.headers['Cache-Control'] = 'no-store'
+    if not await Folders.get_folder_by_id_and_user_id(folder_id, user.id, db=db):
+        raise HTTPException(404, 'Project not found.')
+    row = await profile_row(db, user.id)
+    if not row:
+        raise HTTPException(404)
+    _, scopes, _, updated = await visible_memory(db, row)
+    return {'summary': scopes.get(folder_id, ''), 'paused': row['paused'], 'updated_at': updated}
 
 
 class MemorySettings(BaseModel):

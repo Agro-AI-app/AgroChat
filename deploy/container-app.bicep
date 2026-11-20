@@ -14,6 +14,7 @@ param storageContainer string = 'agrochat'
 param databaseSecretUri string
 param chatKeySecretUri string
 param embeddingKeySecretUri string
+param imageKeySecretUri string = ''
 param sessionKeySecretUri string
 param enrollmentCodeSecretUri string = ''
 @description('Optional Key Vault secret URI for the Open WebUI TOOL_SERVER_CONNECTIONS JSON array.')
@@ -48,6 +49,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
         { name: 'embedding-key', keyVaultUrl: embeddingKeySecretUri, identity: identityId }
         { name: 'session-key', keyVaultUrl: sessionKeySecretUri, identity: identityId }
       ], empty(enrollmentCodeSecretUri) ? [] : [{ name: 'enrollment-code', keyVaultUrl: enrollmentCodeSecretUri, identity: identityId }],
+      empty(imageKeySecretUri) ? [] : [{ name: 'image-key', keyVaultUrl: imageKeySecretUri, identity: identityId }],
       empty(toolsSecretUri) ? [] : [{ name: 'tools', keyVaultUrl: toolsSecretUri, identity: identityId }])
     }
     template: {
@@ -76,6 +78,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
           { name: 'PGVECTOR_INITIALIZE_MAX_VECTOR_LENGTH', value: '3072' }
           { name: 'PGVECTOR_CREATE_EXTENSION', value: 'false' }
         ], empty(enrollmentCodeSecretUri) ? [] : [{ name: 'AGROCHAT_ENROLLMENT_CODE', secretRef: 'enrollment-code' }],
+        empty(imageKeySecretUri) ? [] : [{ name: 'AZURE_IMAGE_API_KEY', secretRef: 'image-key' }],
         empty(toolsSecretUri) ? [] : [{ name: 'TOOL_SERVER_CONNECTIONS', secretRef: 'tools' }])
         probes: [
           {

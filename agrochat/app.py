@@ -1,6 +1,7 @@
 import asyncio
 import copy
 import logging
+import os
 from contextlib import asynccontextmanager, suppress
 from importlib import import_module
 from pathlib import Path
@@ -19,8 +20,11 @@ from starlette.routing import Mount
 
 from open_webui.internal.db import async_engine, get_async_db_context
 from open_webui.models.chats import Chat, ChatModel, Chats
+from open_webui.models.config import Config
 from open_webui.models.folders import Folders
+from open_webui.utils.images.connections import IMAGE_CONNECTIONS_CONFIG_KEY, PUBLIC_ACCESS_GRANTS, normalize_image_connection
 
+from .documents import document_tool
 from .memory import add_memory, scheduler
 from .profiles import meta, router
 
@@ -37,6 +41,14 @@ native_move_chat = Chats.update_chat_folder_id_by_id_and_user_id
 
 @asynccontextmanager
 async def lifespan(application):
+    # With persistent config disabled, upstream's DB migration cannot supply this key.
+    key = os.getenv('AZURE_IMAGE_API_KEY', '').strip()
+    Config.DEFAULTS[IMAGE_CONNECTIONS_CONFIG_KEY] = [normalize_image_connection({
+        'id': 'azure-image', 'name': 'Azure Images', 'type': 'openai', 'key': key,
+        'url': os.getenv('AGROCHAT_IMAGE_BASE', 'https://agro-llm.services.ai.azure.com/openai/v1'),
+        'config': {'model_ids': ['gpt-image-2'], 'size': '1024x1024', 'edit_size': '1024x1024',
+                   'access_grants': PUBLIC_ACCESS_GRANTS},
+    })] if key else []
     async with native_lifespan(application):
         async with async_engine.begin() as connection:
             await connection.run_sync(meta.create_all)
@@ -78,7 +90,10 @@ async def scoped_builtin_tools(request, extra_params, features=None, model=None,
     model.setdefault('info', {}).setdefault('meta', {}).setdefault('builtinTools', {})['knowledge'] = bool(
         chat_middleware.get_attached_knowledge(model, metadata)
     )
-    return await native_builtin_tools(request, extra_params, features, model, is_note_chat)
+    tools = await native_builtin_tools(request, extra_params, features, model, is_note_chat)
+    if extra_params.get('__user__', {}).get('id') and not is_note_chat:
+        tools['create_document'] = document_tool(request, extra_params)
+    return tools
 
 
 async def move_chat(id, user_id, folder_id, db=None):
@@ -174,9 +189,14 @@ async def account_page():
     return FileResponse(static / 'account.html', headers={'Cache-Control': 'no-store'})
 
 
+@app.get('/projects', include_in_schema=False)
+async def project_page():
+    return FileResponse(static / 'projects.html', headers={'Cache-Control': 'no-store'})
+
+
 @app.get('/agrochat/assets/{filename}', include_in_schema=False)
 async def assets(filename: str):
-    if filename not in {'style.css', 'profiles.js', 'account.js', 'shell.js', 'client.js', 'shell.css'}:
+    if filename not in {'style.css', 'profiles.js', 'account.js', 'shell.js', 'client.js', 'shell.css', 'projects.js', 'projects.css'}:
         raise HTTPException(404)
     return FileResponse(static / filename, headers={'Cache-Control': 'no-cache'})
 
@@ -184,6 +204,8 @@ async def assets(filename: str):
 class ChatFrontend(webui.SPAStaticFiles):
     index = (webui.FRONTEND_BUILD_DIR / 'index.html').read_text().replace(
         '</head>', '<link rel="stylesheet" href="/agrochat/assets/shell.css">'
+        '<link rel="stylesheet" href="/agrochat/assets/projects.css">'
+        '<script type="module" src="/agrochat/assets/projects.js"></script>'
         '<script defer src="/agrochat/assets/shell.js"></script></head>', 1,
     )
 
